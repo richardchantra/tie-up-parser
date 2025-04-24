@@ -1,22 +1,29 @@
 import streamlit as st
-import os
+import pdfplumber
+from io import BytesIO
 
-st.set_page_config(layout="wide")
 st.title("PDF Viewer with Tabs")
-
 uploaded_files = st.file_uploader("Upload two PDFs", type="pdf", accept_multiple_files=True)
 
 if uploaded_files and len(uploaded_files) == 2:
     tabs = st.tabs(["PDF 1", "PDF 2"])
+    
     for i in range(2):
-        with open(f"temp_{i}.pdf", "wb") as f:
-            f.write(uploaded_files[i].read())
+        file = uploaded_files[i]
         with tabs[i]:
-            st.markdown(f"#### Viewing PDF {i+1}")
-            st.markdown(
-                f'<iframe src="https://docs.google.com/gview?url=https://yourdomain.com/path/to/temp_{i}.pdf&embedded=true" '
-                f'width="100%" height="800px" frameborder="0"></iframe>',
-                unsafe_allow_html=True
+            st.subheader(f"Viewing: {file.name}")
+
+            # Preview text using pdfplumber
+            with pdfplumber.open(BytesIO(file.read())) as pdf:
+                first_page = pdf.pages[0]
+                st.text(first_page.extract_text())
+
+            # Download option
+            st.download_button(
+                label=f"Download {file.name}",
+                data=file,
+                file_name=file.name,
+                mime="application/pdf"
             )
 else:
-    st.info("Please upload exactly two PDFs.")
+    st.info("Please upload exactly two PDF files.")
