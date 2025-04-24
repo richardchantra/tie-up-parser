@@ -1,21 +1,22 @@
 import streamlit as st
-import base64
-
-def display_pdf(file_path):
-    with open(file_path, "rb") as f:
-        base64_pdf = base64.b64encode(f.read()).decode('utf-8')
-    pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="800px" type="application/pdf"></iframe>'
-    st.markdown(pdf_display, unsafe_allow_html=True)
+import os
 
 st.set_page_config(layout="wide")
 st.title("PDF Viewer with Tabs")
 
-tab1, tab2 = st.tabs(["PDF 1", "PDF 2"])
+uploaded_files = st.file_uploader("Upload two PDFs", type="pdf", accept_multiple_files=True)
 
-with tab1:
-    st.header("Viewing PDF 1")
-    display_pdf("example1.pdf")  # Replace with your file path
-
-with tab2:
-    st.header("Viewing PDF 2")
-    display_pdf("example2.pdf")  # Replace with your file path
+if uploaded_files and len(uploaded_files) == 2:
+    tabs = st.tabs(["PDF 1", "PDF 2"])
+    for i in range(2):
+        with open(f"temp_{i}.pdf", "wb") as f:
+            f.write(uploaded_files[i].read())
+        with tabs[i]:
+            st.markdown(f"#### Viewing PDF {i+1}")
+            st.markdown(
+                f'<iframe src="https://docs.google.com/gview?url=https://yourdomain.com/path/to/temp_{i}.pdf&embedded=true" '
+                f'width="100%" height="800px" frameborder="0"></iframe>',
+                unsafe_allow_html=True
+            )
+else:
+    st.info("Please upload exactly two PDFs.")
